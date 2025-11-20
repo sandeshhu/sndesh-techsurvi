@@ -8,6 +8,9 @@ const nextConfig = {
       },
     ],
   },
+  serverRuntimeConfig: {
+    apiTimeout: 10000,
+  },
 };
 
 export default nextConfig;
