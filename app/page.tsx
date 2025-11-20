@@ -1,65 +1,76 @@
-import Image from "next/image";
+import Image from 'next/image';
+import Link from 'next/link';
+import { Star, AlertCircle } from 'lucide-react';
 
-export default function Home() {
+// Fetch data on the server (SEO Friendly)
+async function getProducts() {
+  try {
+    const res = await fetch('https://fakestoreapi.com/products', {
+      // Optimization: Cache data for 1 hour to speed up Vercel response
+      next: { revalidate: 3600 }
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    return JSON.parse(text);
+  } catch (e) {
+    console.error('Failed to fetch products:', e);
+    return null;
+  }
+}
+
+export default async function Home() {
+  const products = await getProducts();
+
+  if (!products) {
+    return (
+      <div className="text-center py-20">
+        <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load Products</h2>
+        <p className="text-gray-500">Please check your internet connection and try again later.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className='bg-:#b8a5a5'>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Latest Arrivals</h1>
+        <p className="text-gray-500">Handpicked essentials for you</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {products.map((product: any) => (
+          <Link
+            href={`/product/${product.id}`}
+            key={product.id}
+            className="group bg-white border-amber-500 border rounded-xl p-4 hover:shadow-xl transition-all duration-300 flex flex-col h-full"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <div className="relative h-48 w-full mb-4 bg-white overflow-hidden flex items-center justify-center">
+              {/* Optimization: Next/Image for performance */}
+              <Image
+                src={product.image}
+                alt={product.title}
+                fill
+                className="object-contain group-hover:scale-110 transition duration-300"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+              />
+            </div>
+
+            <div className="flex-1 flex flex-col justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-1">{product.category}</p>
+                <h3 className="text-sm font-bold text-gray-900 line-clamp-2 mb-2 leading-snug">{product.title}</h3>
+
+                <div className="flex items-center gap-1 mb-2">
+                  <Star size={12} className="fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs text-gray-400 ml-1">({product.rating.rate})</span>
+                </div>
+              </div>
+              <p className="text-lg font-bold text-blue-600 mt-2">${product.price.toFixed(2)}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
