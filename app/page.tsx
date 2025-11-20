@@ -5,11 +5,21 @@ import { Star, AlertCircle } from 'lucide-react';
 // Fetch data on the server (SEO Friendly)
 async function getProducts() {
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
     const res = await fetch('https://fakestoreapi.com/products', {
-      // Optimization: Cache data for 1 hour to speed up Vercel response
-      next: { revalidate: 3600 }
+      next: { revalidate: 3600 },
+      signal: controller.signal,
     });
-    if (!res.ok) return null;
+    
+    clearTimeout(timeoutId);
+    
+    if (!res.ok) {
+      console.error('API returned:', res.status);
+      return null;
+    }
+    
     const text = await res.text();
     return JSON.parse(text);
   } catch (e) {
